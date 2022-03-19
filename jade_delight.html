@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Jade Delight</title>
+<style type="text/css">
+	.userInfo {
+		display:block;
+		width:300px;
+	}
+	
+	.totalSection {
+		display:block;
+		width:300px;
+	}
+
+	input[type="text"] {
+		float:right;
+		display:inline-block;
+	}
+
+</style>
+<script 
+src="https://code.jquery.com/jquery-3.6.0.js" 
+integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" 
+crossorigin="anonymous"></script>
+<script>
+	$(document).ready(function() {
+		// Pickup/Delivery Show/Hide
+		const p_or_d = document.getElementsByName("p_or_d");
+		pickup = p_or_d[0];
+		delivery = p_or_d[1];
+		pickup.addEventListener('click', showOrHide);
+		delivery.addEventListener('click', showOrHide);
+
+		const address = document.getElementsByClassName("userInfo address");
+		address[0].style.display = 'none';
+		address[1].style.display = 'none';
+
+		function showOrHide() {
+			if (pickup.checked) {
+				address[0].style.display = 'none';
+				address[1].style.display = 'none';
+			} else { // delivery.checked
+				address[0].style.display = 'block';
+				address[1].style.display = 'block';
+			}
+		}
+
+		// Adjusting cost 
+		adjustCosts();
+		$('[name="quan0"]').change(function() {
+			adjustCosts();
+		});
+		$('[name="quan1"]').change(function() {
+			adjustCosts();
+		});
+		$('[name="quan2"]').change(function() {
+			adjustCosts();
+		});
+		$('[name="quan3"]').change(function() {
+			adjustCosts();
+		});
+		$('[name="quan4"]').change(function() {
+			adjustCosts();
+		});
+		function adjustCosts() {
+			subtotal = 0;
+			for (let i = 0; i < menuItems.length; i++) {
+				console.log(i);
+				numItems = parseInt(document.getElementsByName("quan" + i)[0].value);
+				cost = numItems * menuItems[i].cost;
+				subtotal += cost;
+				document.getElementsByName("cost")[i].value = cost.toFixed(2);
+			}
+			tax = subtotal * 0.0625;
+			total = subtotal + tax;
+			document.getElementById("subtotal").value = subtotal.toFixed(2);
+			document.getElementById("tax").value = tax.toFixed(2);
+			document.getElementById("total").value = total.toFixed(2);
+		}
+
+		// Submit Validation
+		$('input[type="button"][value="Submit Order"]').click(function() {
+			// validate last name
+			lname = document.getElementsByName("lname")[0].value;
+			if (lname == "") {
+				alert("Must enter last name.");	
+				return;
+			}
+			// validate phone number 
+			phone = document.getElementsByName("phone")[0].value; 
+			numNums = 0;
+			for (let i = 0; i < phone.length; i++) {
+				if (isNumber(phone.charAt(i))) {
+					numNums += 1;
+				}
+			}
+			if (numNums != 7 && numNums != 10) {
+				alert("Must enter a valid phone number of 7 or 10 digits.");
+				return;
+			}
+			function isNumber(c) {
+				return (c >= '0' && c <= '9');
+			}
+			
+			// validate address
+			if (delivery.checked) {
+				if (document.getElementsByName("street")[0].value == "" || document.getElementsByName("city")[0].value == "") {
+					alert("Must enter full address if requesting delivery.");
+					return;
+				}
+			}
+
+			// at least one item was ordered
+			numItems = 0; 
+			for (let i = 0; i < menuItems.length; i++) {
+				numItems += parseInt(document.getElementsByName("quan" + i)[0].value);
+			}
+			if (numItems == 0) {
+				alert("Must order at least one item.");
+				return;
+			}
+
+			// make new window
+			alert("Thank you for your order!");
+			popUp = window.open("about:blank", "hello", "width:300px,height:300px");
+			order = "";
+			for (let i = 0; i < menuItems.length; i++) {
+				numItems = parseInt(document.getElementsByName("quan" + i)[0].value);
+				if (numItems > 0) {
+					order += numItems + " orders of " + menuItems[i].name + " for $" + document.getElementsByName("cost")[i].value + "<br>";
+				}
+			}
+			order += "Subtotal: $" + document.getElementById("subtotal").value + 
+			         "<br>Tax: $" + document.getElementById("tax").value +
+					 "<br>Total: $" + document.getElementById("total").value + "<br>";
+
+			// alert delivery time
+			time = new Date();
+			hours = time.getHours();
+			minutes = time.getMinutes();
+			am_pm = "";
+
+			if (pickup.checked) {
+				minutes += 15;
+			} else {
+				minutes += 30;
+			}
+			if (minutes > 60) {
+				minutes -= 60;
+				hours += 1;
+			}
+			if (hours > 12) {
+				hours -= 12;
+				am_pm += "pm";
+			} else if (hours == 0) {
+				hours = 12;
+				am_pm += "am";
+			} else if (hours < 12) {
+				am_pm += "am";
+			} else { // hours == 12
+				am_pm += "pm";
+			}
+			if (minutes < 10) {
+				minutes = "0" + minutes;
+			}
+			order += "Your food will be ready at " + hours + ":" + minutes + am_pm + ".";
+			popUp.document.write(order);
+		});
+	});
+</script>
+</head>
+
+<body>
+<script>
+
+function MenuItem(name, cost)
+{
+	this.name = name;
+	this.cost=cost;
+}
+
+menuItems = new Array(
+	new MenuItem("Chicken Chop Suey", 4.5),
+	new MenuItem("Sweet and Sour Pork", 6.25),
+	new MenuItem("Shrimp Lo Mein", 6.25),
+	new MenuItem("Moo Shi Chicken", 7.5),
+	new MenuItem("Fried Rice", 2.85)
+);
+
+function makeSelect(name, minRange, maxRange)
+{
+	var t= "";
+	t = "<select name='" + name + "' size='1'>";
+	for (j=minRange; j<=maxRange; j++)
+	   t += "<option>" + j + "</option>";
+	t+= "</select>"; 
+	return t;
+}
+
+function td(content, className="")
+{
+	return "<td class = '" + className + "'>" + content + "</td>";
+}
+	
+</script>
+
+<h1>Jade Delight</h1>
+<form>
+
+<p class="userInfo"><label>First Name:</label> <input type="text"  name='fname' /></p>
+<p class="userInfo"><label>Last Name*</label>:  <input type="text"  name='lname' /></p>
+<p class="userInfo address"><label>Street*</label>: <input type="text" name='street' /></p>
+<p class="userInfo address"><label>City*</label>: <input type="text" name='city' /></p>
+<p class="userInfo"><label>Phone*</label>: <input type="text"  name='phone' /></p>
+<p> 
+	<input type="radio"  name="p_or_d" value = "pickup" checked="checked"/>Pickup  
+	<input type="radio"  name='p_or_d' value = 'delivery'/>
+	Delivery
+</p>
+<table border="0" cellpadding="3">
+  <tr>
+    <th>Select Item</th>
+    <th>Item Name</th>
+    <th>Cost Each</th>
+    <th>Total Cost</th>
+  </tr>
+<script>
+
+  var s = "";
+  for (i=0; i< menuItems.length; i++)
+  {
+	  s += "<tr>";
+	  s += td(makeSelect("quan" + i, 0, 10),"selectQuantity");
+	  s += td(menuItems[i].name, "itemName");
+	  s += td("$" +menuItems[i].cost.toFixed(2), "cost");
+	  s += td("$<input type='text' name='cost'/>", "totalCost");
+	  s+= "</tr>";
+  }
+  document.writeln(s);
+</script>
+</table>
+<p class="subtotal totalSection"><label>Subtotal</label>: 
+   $ <input type="text"  name='subtotal' id="subtotal" />
+</p>
+<p class="tax totalSection"><label>Mass tax 6.25%:</label>
+  $ <input type="text"  name='tax' id="tax" />
+</p>
+<p class="total totalSection"><label>Total:</label> $ <input type="text"  name='total' id="total" />
+</p>
+
+<input type = "button" value = "Submit Order" />
+
+</form>
+</body>
+</html>
